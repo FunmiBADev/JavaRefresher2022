@@ -2,52 +2,49 @@ package com.learn.java.rest.Controller;
 
 import com.learn.java.rest.Models.User;
 import com.learn.java.rest.Repo.UserRepo;
+import com.learn.java.rest.Services.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@RequestMapping("/api/users")
 public class ApiController {
 
-    @Autowired
-    private UserRepo _userRepo;
+    private IUserService _userService;
 
-    @GetMapping(value = "/")
-    public String getPage() {
-        return "Welcome!";
+    public ApiController(IUserService userService) {
+        super();
+        _userService = userService;
     }
 
-    @GetMapping(value = "/users")
+    @GetMapping
     public List<User> GetUsers() {
-        return _userRepo.findAll();
-    }
-    @PostMapping(value = "/create")
-    public String CreateUser(@RequestBody User user) {
-        _userRepo.save(user);
-
-        return "User saved to Database!";
+        return _userService.GetALlUsers();
     }
 
-    @PutMapping(value = "/{id}")
-    public String UpdateUser(@PathVariable long id, @RequestBody User user) {
-        User matchUser = _userRepo.findById(id).get();
-        matchUser.setFirstName(user.getFirstName());
-        matchUser.setLastName(user.getLastName());
-        matchUser.setAge(user.getAge());
-        matchUser.setOccupation(user.getOccupation());
-
-        _userRepo.save(matchUser);
-
-        return "User details updated!";
+    @PostMapping
+    public ResponseEntity<User>  CreateUser(@RequestBody User user) {
+        return new ResponseEntity<>(_userService.CreateUser(user), HttpStatus.CREATED);
     }
 
-    @DeleteMapping(value = "/{id}")
-    public String DeleteUser(@PathVariable long id) {
-        User matchUser = _userRepo.findById(id).get();
+    @PutMapping(value = "{id}")
+    public ResponseEntity<User>  UpdateUser(@PathVariable long id, @RequestBody User user) {
 
-        _userRepo.delete(matchUser);
+        return new ResponseEntity<>(_userService.UpdateUser(user, id), HttpStatus.OK);
+    }
 
-        return "Deleted User with ID: " +id ;
+    @DeleteMapping(value = "{id}")
+    public ResponseEntity<String> DeleteUser(@PathVariable long id) {
+        _userService.DeleteUser(id);
+        return new ResponseEntity<>("User deleted successfully!.", HttpStatus.OK);
+    }
+
+    @GetMapping("{id}")
+    public ResponseEntity<User> getEmployeeById(@PathVariable("id") long userId){
+        return new ResponseEntity<>(_userService.GetUserById(userId), HttpStatus.OK);
     }
 }
